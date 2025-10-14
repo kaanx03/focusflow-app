@@ -38,13 +38,28 @@ export default function PomodoroTimer() {
     if (isActive && timeLeft > 0) {
       interval = setInterval(() => {
         tick();
-      }, 1000);
+      }, 100); // 100ms'de bir kontrol et
     } else if (timeLeft === 0) {
       handleSessionComplete();
     }
 
     return () => clearInterval(interval);
-  }, [isActive, timeLeft]);
+  }, [isActive, timeLeft, tick]);
+
+  // Sayfa tekrar görünür olduğunda zamanı senkronize et
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && isActive) {
+        tick(); // Hemen bir tick çalıştır
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [isActive, tick]);
 
   const sendNotification = (title: string, body: string) => {
     if ("Notification" in window && Notification.permission === "granted") {

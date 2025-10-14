@@ -18,6 +18,8 @@ interface PomodoroStore {
   timeLeft: number;
   isActive: boolean;
   completedPomodoros: number;
+  startTime: number | null;
+  endTime: number | null;
 
   // Actions
   setSessionType: (type: SessionType) => void;
@@ -40,6 +42,8 @@ export const usePomodoroStore = create<PomodoroStore>((set, get) => ({
   timeLeft: 25 * 60,
   isActive: false,
   completedPomodoros: 0,
+  startTime: null,
+  endTime: null,
 
   updateSettings: (settings) => {
     set({ settings });
@@ -64,11 +68,27 @@ export const usePomodoroStore = create<PomodoroStore>((set, get) => ({
       sessionType: type,
       timeLeft: timeMap[type],
       isActive: false,
+      startTime: null,
+      endTime: null,
     });
   },
 
-  startTimer: () => set({ isActive: true }),
-  pauseTimer: () => set({ isActive: false }),
+  startTimer: () => {
+    const state = get();
+    const now = Date.now();
+    set({
+      isActive: true,
+      startTime: now,
+      endTime: now + state.timeLeft * 1000,
+    });
+  },
+
+  pauseTimer: () =>
+    set({
+      isActive: false,
+      startTime: null,
+      endTime: null,
+    }),
 
   resetTimer: () => {
     const { sessionType, settings } = get();
@@ -80,14 +100,19 @@ export const usePomodoroStore = create<PomodoroStore>((set, get) => ({
     set({
       timeLeft: timeMap[sessionType],
       isActive: false,
+      startTime: null,
+      endTime: null,
     });
   },
 
   tick: () => {
-    const { timeLeft, isActive } = get();
-    if (isActive && timeLeft > 0) {
-      set({ timeLeft: timeLeft - 1 });
-    }
+    const state = get();
+    if (!state.endTime) return;
+
+    const now = Date.now();
+    const remaining = Math.max(0, Math.ceil((state.endTime - now) / 1000));
+
+    set({ timeLeft: remaining });
   },
 
   completeSession: () => {
@@ -95,6 +120,10 @@ export const usePomodoroStore = create<PomodoroStore>((set, get) => ({
     if (sessionType === "pomodoro") {
       set({ completedPomodoros: completedPomodoros + 1 });
     }
-    set({ isActive: false });
+    set({
+      isActive: false,
+      startTime: null,
+      endTime: null,
+    });
   },
 }));
