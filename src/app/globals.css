@@ -21,7 +21,8 @@ body {
 /* Grid pattern background - Light Mode */
 body:not(.dark) {
   background-color: #ffffff;
-  background-image: linear-gradient(#fafbfd 1px, transparent 1px),
+  background-image:
+    linear-gradient(#fafbfd 1px, transparent 1px),
     linear-gradient(90deg, #fafbfd 1px, transparent 1px);
   background-size: 20px 20px;
   background-attachment: fixed;
@@ -30,7 +31,8 @@ body:not(.dark) {
 /* Grid pattern background - Dark Mode */
 body.dark {
   background-color: #1a1f2e;
-  background-image: linear-gradient(rgba(37, 43, 59, 0.5) 1px, transparent 1px),
+  background-image:
+    linear-gradient(rgba(37, 43, 59, 0.5) 1px, transparent 1px),
     linear-gradient(90deg, rgba(37, 43, 59, 0.5) 1px, transparent 1px);
   background-size: 20px 20px;
   background-attachment: fixed;

@@ -93,9 +93,9 @@ export default function TaskList() {
   }
 
   return (
-    <div className="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-2xl p-6 shadow-lg">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-dark-text-primary">
+    <div className="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-2xl p-2 xs:p-6 shadow-lg">
+      <div className="flex items-center justify-between mb-2 xs:mb-4">
+        <h2 className="text-lg xs:text-xl font-bold text-gray-900 dark:text-dark-text-primary">
           Today's Tasks
         </h2>
         <span className="text-sm text-gray-600 dark:text-dark-text-secondary">
@@ -104,20 +104,20 @@ export default function TaskList() {
       </div>
 
       {/* Add Task Form */}
-      <form onSubmit={addTask} className="mb-4">
-        <div className="flex gap-2">
+      <form onSubmit={addTask} className="mb-2 xs:mb-4">
+        <div className="flex gap-1 xs:gap-2">
           <input
             type="text"
             value={newTaskTitle}
             onChange={(e) => setNewTaskTitle(e.target.value)}
             placeholder="Add a new task..."
-            className="flex-1 px-4 py-2 border border-gray-300 dark:border-dark-border bg-white dark:bg-dark-bg text-gray-900 dark:text-dark-text-primary placeholder-gray-400 dark:placeholder-gray-500 rounded-lg focus:ring-2 focus:ring-primary outline-none"
+            className="flex-1 px-2 xs:px-4 py-1.5 xs:py-2 border border-gray-300 dark:border-dark-border bg-white dark:bg-dark-bg text-gray-900 dark:text-dark-text-primary placeholder-gray-400 dark:placeholder-gray-500 rounded-lg focus:ring-2 focus:ring-primary outline-none text-sm xs:text-base min-w-0"
           />
           <button
             type="submit"
-            className="px-4 py-2 bg-primary hover:bg-blue-600 text-white rounded-lg transition flex items-center gap-2"
+            className="px-2 xs:px-4 py-1.5 xs:py-2 bg-primary hover:bg-blue-600 text-white rounded-lg transition flex items-center gap-1 xs:gap-2 flex-shrink-0"
           >
-            <Plus size={20} />
+            <Plus size={16} className="xs:w-5 xs:h-5" />
           </button>
         </div>
       </form>
@@ -125,7 +125,7 @@ export default function TaskList() {
       {/* Task List */}
       <div className="space-y-2">
         {tasks.length === 0 ? (
-          <div className="text-center py-8 text-gray-500 dark:text-dark-text-secondary">
+          <div className="text-center py-6 xs:py-8 text-sm text-gray-500 dark:text-dark-text-secondary">
             <p>No tasks yet. Add one to get started!</p>
           </div>
         ) : (

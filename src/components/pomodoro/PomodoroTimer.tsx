@@ -102,8 +102,8 @@ export default function PomodoroTimer() {
           sessionType === "pomodoro"
             ? settings.pomodoro / 60
             : sessionType === "short_break"
-            ? settings.shortBreak / 60
-            : settings.longBreak / 60,
+              ? settings.shortBreak / 60
+              : settings.longBreak / 60,
         session_type: sessionType,
         completed_at: new Date().toISOString(),
       });
@@ -169,8 +169,8 @@ export default function PomodoroTimer() {
       sessionType === "pomodoro"
         ? settings.pomodoro
         : sessionType === "short_break"
-        ? settings.shortBreak
-        : settings.longBreak;
+          ? settings.shortBreak
+          : settings.longBreak;
     return ((total - timeLeft) / total) * 100;
   };
 
@@ -182,29 +182,39 @@ export default function PomodoroTimer() {
 
   return (
     <div className="w-full">
-      <div className="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-2xl p-6 lg:p-8 shadow-lg">
+      <div className="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-2xl p-2 xs:p-6 lg:p-8 shadow-lg">
         {/* Session Type Tabs */}
-        <div className="flex gap-2 mb-8">
+        <div className="flex gap-1 xs:gap-2 mb-3 xs:mb-8">
           {tabs.map((tab) => (
             <button
               key={tab.type}
               onClick={() => setSessionType(tab.type)}
               disabled={isActive}
-              className={`flex-1 py-2 px-4 rounded-lg font-medium transition ${
+              className={`flex-1 py-1.5 xs:py-2 px-2 xs:px-4 rounded-lg font-medium transition text-sm xs:text-sm ${
                 sessionType === tab.type
                   ? "bg-primary text-white"
                   : "bg-gray-100 dark:bg-dark-bg text-gray-600 dark:text-dark-text-secondary hover:bg-gray-200 dark:hover:bg-gray-700"
               } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
-              {tab.label}
+              <span className="hidden xs:inline">{tab.label}</span>
+              <span className="xs:hidden">
+                {tab.type === "pomodoro"
+                  ? "Pomo"
+                  : tab.type === "short_break"
+                    ? "Short"
+                    : "Long"}
+              </span>
             </button>
           ))}
         </div>
 
         {/* Timer Display with Progress Ring */}
-        <div className="relative flex items-center justify-center mb-8">
+        <div className="relative flex items-center justify-center mb-6 xs:mb-8">
           {/* SVG Progress Ring */}
-          <svg className="transform -rotate-90" width="280" height="280">
+          <svg
+            className="transform -rotate-90 w-56 h-56 xs:w-72 xs:h-72"
+            viewBox="0 0 280 280"
+          >
             {/* Background Circle */}
             <circle
               cx="140"
@@ -232,48 +242,49 @@ export default function PomodoroTimer() {
 
           {/* Time Display */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-6xl font-bold text-gray-900 dark:text-dark-text-primary">
+            <span className="text-4xl xs:text-6xl font-bold text-gray-900 dark:text-dark-text-primary">
               {formatTime(timeLeft)}
             </span>
           </div>
         </div>
 
         {/* Control Buttons */}
-        <div className="flex gap-3 justify-center mb-4">
+        <div className="flex gap-1 xs:gap-3 justify-center mb-3 xs:mb-4 flex-wrap">
           <button
             onClick={isActive ? pauseTimer : startTimer}
-            className="flex items-center gap-2 px-8 py-3 bg-primary hover:bg-blue-600 text-white font-medium rounded-lg transition"
+            className="flex items-center gap-1 xs:gap-2 px-3 xs:px-8 py-2 xs:py-3 bg-primary hover:bg-blue-600 text-white font-medium rounded-lg transition text-sm xs:text-base flex-shrink-0"
           >
             {isActive ? (
               <>
-                <Pause size={20} />
-                Pause
+                <Pause size={16} className="xs:w-5 xs:h-5" />
+                <span className="hidden xs:inline">Pause</span>
               </>
             ) : (
               <>
-                <Play size={20} />
-                Start
+                <Play size={16} className="xs:w-5 xs:h-5" />
+                <span className="hidden xs:inline">Start</span>
               </>
             )}
           </button>
 
           <button
             onClick={resetTimer}
-            className="flex items-center gap-2 px-6 py-3 bg-gray-100 dark:bg-dark-bg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-dark-text-primary font-medium rounded-lg transition"
+            className="flex items-center gap-1 xs:gap-2 px-2 xs:px-6 py-2 xs:py-3 bg-gray-100 dark:bg-dark-bg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-dark-text-primary font-medium rounded-lg transition text-sm xs:text-base flex-shrink-0"
           >
-            <RotateCcw size={20} />
-            Reset
+            <RotateCcw size={16} className="xs:w-5 xs:h-5" />
+            <span className="hidden xs:inline">Reset</span>
           </button>
 
           {/* Skip/Complete Button */}
           <button
             onClick={handleSkipSession}
-            className="flex items-center gap-2 px-6 py-3 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 text-green-600 dark:text-green-400 font-medium rounded-lg transition"
+            className="flex items-center gap-1 xs:gap-2 px-2 xs:px-6 py-2 xs:py-3 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 text-green-600 dark:text-green-400 font-medium rounded-lg transition text-sm xs:text-base flex-shrink-0"
             title={
               sessionType === "pomodoro" ? "Mark as Complete" : "Skip Session"
             }
           >
-            <SkipForward size={20} />
+            <SkipForward size={16} className="xs:w-5 xs:h-5" />
+            <span className="hidden xs:inline">Skip</span>
           </button>
         </div>
 

@@ -195,19 +195,20 @@ export default function StatsPanel() {
   }
 
   return (
-    <div className="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-2xl p-6 lg:p-8 shadow-lg">
+    <div className="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-2xl p-2 xs:p-6 lg:p-8 shadow-lg">
       {/* Header with View Toggle */}
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl lg:text-2xl font-bold text-gray-900 dark:text-dark-text-primary flex items-center gap-2">
-          <TrendingUp size={24} className="text-primary" />
-          Your Progress
+      <div className="flex items-center justify-between mb-3 xs:mb-6">
+        <h2 className="text-base xs:text-xl lg:text-2xl font-bold text-gray-900 dark:text-dark-text-primary flex items-center gap-1 xs:gap-2">
+          <TrendingUp size={16} className="xs:w-6 xs:h-6 text-primary" />
+          <span className="hidden xs:inline">Your Progress</span>
+          <span className="xs:hidden">Progress</span>
         </h2>
 
         {/* View Toggle */}
-        <div className="flex gap-2 bg-gray-100 dark:bg-dark-bg p-1 rounded-lg">
+        <div className="flex gap-1 xs:gap-2 bg-gray-100 dark:bg-dark-bg p-0.5 xs:p-1 rounded-lg">
           <button
             onClick={() => setView("week")}
-            className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${
+            className={`px-2 xs:px-3 py-1 xs:py-1.5 rounded-md text-xs xs:text-sm font-medium transition ${
               view === "week"
                 ? "bg-white dark:bg-dark-card text-primary shadow-sm"
                 : "text-gray-600 dark:text-dark-text-secondary hover:text-gray-900 dark:hover:text-dark-text-primary"
@@ -217,7 +218,7 @@ export default function StatsPanel() {
           </button>
           <button
             onClick={() => setView("month")}
-            className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${
+            className={`px-2 xs:px-3 py-1 xs:py-1.5 rounded-md text-xs xs:text-sm font-medium transition ${
               view === "month"
                 ? "bg-white dark:bg-dark-card text-primary shadow-sm"
                 : "text-gray-600 dark:text-dark-text-secondary hover:text-gray-900 dark:hover:text-dark-text-primary"
@@ -227,7 +228,7 @@ export default function StatsPanel() {
           </button>
           <button
             onClick={() => setView("year")}
-            className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${
+            className={`px-2 xs:px-3 py-1 xs:py-1.5 rounded-md text-xs xs:text-sm font-medium transition ${
               view === "year"
                 ? "bg-white dark:bg-dark-card text-primary shadow-sm"
                 : "text-gray-600 dark:text-dark-text-secondary hover:text-gray-900 dark:hover:text-dark-text-primary"
@@ -239,23 +240,25 @@ export default function StatsPanel() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-          <div className="flex items-center gap-2 text-blue-700 dark:text-blue-400 mb-2">
-            <Clock size={20} />
-            <span className="text-sm font-medium">Today</span>
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 xs:gap-4 mb-3 xs:mb-6">
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-2 xs:p-4">
+          <div className="flex items-center gap-1 xs:gap-2 text-blue-700 dark:text-blue-400 mb-1 xs:mb-2">
+            <Clock size={14} className="xs:w-5 xs:h-5" />
+            <span className="text-xs xs:text-sm font-medium">Today</span>
           </div>
-          <p className="text-3xl font-bold text-blue-900 dark:text-blue-300">
+          <p className="text-xl xs:text-3xl font-bold text-blue-900 dark:text-blue-300">
             {formatMinutes(todayMinutes)}
           </p>
         </div>
 
-        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
-          <div className="flex items-center gap-2 text-green-700 dark:text-green-400 mb-2">
-            <Calendar size={20} />
-            <span className="text-sm font-medium">{getPeriodLabel()}</span>
+        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-2 xs:p-4">
+          <div className="flex items-center gap-1 xs:gap-2 text-green-700 dark:text-green-400 mb-1 xs:mb-2">
+            <Calendar size={14} className="xs:w-5 xs:h-5" />
+            <span className="text-xs xs:text-sm font-medium">
+              {getPeriodLabel()}
+            </span>
           </div>
-          <p className="text-3xl font-bold text-green-900 dark:text-green-300">
+          <p className="text-xl xs:text-3xl font-bold text-green-900 dark:text-green-300">
             {formatMinutes(periodMinutes)}
           </p>
         </div>
@@ -272,7 +275,7 @@ export default function StatsPanel() {
       </div>
 
       {/* Chart */}
-      <div className="h-64 lg:h-80">
+      <div className="h-48 xs:h-64 lg:h-80">
         <ResponsiveContainer width="100%" height="100%">
           {view === "year" ? (
             <LineChart data={chartData}>
