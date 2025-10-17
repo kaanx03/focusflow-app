@@ -6,6 +6,7 @@ import { Play, Pause, RotateCcw, Settings, SkipForward } from "lucide-react";
 import confetti from "canvas-confetti";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth-context";
+import { loadUserSettings } from "@/lib/settings";
 
 export default function PomodoroTimer() {
   const { user } = useAuth();
@@ -14,15 +15,36 @@ export default function PomodoroTimer() {
     timeLeft,
     isActive,
     settings,
+    completedPomodoros,
     setSessionType,
     startTimer,
     pauseTimer,
     resetTimer,
     tick,
     completeSession,
+    loadSettingsFromDB,
   } = usePomodoroStore();
 
   const [showSettings, setShowSettings] = useState(false);
+
+  // Load user settings from database on mount
+  useEffect(() => {
+    async function initializeSettings() {
+      if (user) {
+        const userSettings = await loadUserSettings(user.id);
+        if (userSettings) {
+          loadSettingsFromDB({
+            pomodoro: userSettings.pomodoro_duration,
+            shortBreak: userSettings.short_break_duration,
+            longBreak: userSettings.long_break_duration,
+            longBreakInterval: userSettings.long_break_interval,
+            autoStartBreaks: userSettings.auto_start_breaks,
+          });
+        }
+      }
+    }
+    initializeSettings();
+  }, [user, loadSettingsFromDB]);
 
   // Request notification permission on mount
   useEffect(() => {
@@ -39,7 +61,8 @@ export default function PomodoroTimer() {
       interval = setInterval(() => {
         tick();
       }, 100); // 100ms'de bir kontrol et
-    } else if (timeLeft === 0) {
+    } else if (timeLeft === 0 && isActive) {
+      // Only trigger completion if timer was actually running
       handleSessionComplete();
     }
 
@@ -61,6 +84,31 @@ export default function PomodoroTimer() {
     };
   }, [isActive, tick]);
 
+  // Update document title with remaining time
+  useEffect(() => {
+    const formatTime = (seconds: number) => {
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+    };
+
+    const getSessionEmoji = () => {
+      if (sessionType === "pomodoro") return "🍅";
+      if (sessionType === "short_break") return "☕";
+      return "🌴";
+    };
+
+    if (isActive) {
+      document.title = `${formatTime(timeLeft)} ${getSessionEmoji()} - ThothFlow`;
+    } else {
+      document.title = "ThothFlow - Productivity App";
+    }
+
+    return () => {
+      document.title = "ThothFlow - Productivity App";
+    };
+  }, [timeLeft, isActive, sessionType]);
+
   const sendNotification = (title: string, body: string) => {
     if ("Notification" in window && Notification.permission === "granted") {
       new Notification(title, {
@@ -77,11 +125,12 @@ export default function PomodoroTimer() {
     // Play sound
     try {
       const audio = new Audio(
-        "https://actions.google.com/sounds/v1/alarms/beep_short.ogg"
+        "https://orangefreesounds.com/wp-content/uploads/2025/07/Modern-futuristic-notification-sound-effect.mp3"
       );
-      audio.play().catch(() => console.log("Audio blocked"));
+      audio.volume = 0.6; // Set volume to 60%
+      audio.play().catch((err) => console.log("Audio blocked:", err));
     } catch (error) {
-      console.log("Audio not available");
+      console.log("Audio not available:", error);
     }
 
     // Show confetti
@@ -109,24 +158,34 @@ export default function PomodoroTimer() {
       );
     }
 
-    // Save to database
-    if (user) {
+    // Save to database - ONLY save pomodoro sessions, not breaks
+    if (user && sessionType === "pomodoro") {
       await supabase.from("pomodoro_sessions").insert({
         user_id: user.id,
-        duration_minutes:
-          sessionType === "pomodoro"
-            ? settings.pomodoro / 60
-            : sessionType === "short_break"
-              ? settings.shortBreak / 60
-              : settings.longBreak / 60,
+        duration_minutes: settings.pomodoro / 60,
         session_type: sessionType,
         completed_at: new Date().toISOString(),
       });
     }
 
-    // Auto switch to break
+    // Determine next session type
     if (sessionType === "pomodoro") {
-      setSessionType("short_break");
+      // Check if it's time for a long break
+      // completedPomodoros is already incremented by completeSession()
+      const shouldTakeLongBreak = completedPomodoros > 0 && completedPomodoros % settings.longBreakInterval === 0;
+      const nextSessionType = shouldTakeLongBreak ? "long_break" : "short_break";
+
+      setSessionType(nextSessionType);
+
+      // Auto-start break if enabled
+      if (settings.autoStartBreaks) {
+        setTimeout(() => {
+          startTimer();
+        }, 100); // Small delay to ensure session type is updated
+      }
+    } else {
+      // Break finished, switch back to pomodoro (don't auto-start)
+      setSessionType("pomodoro");
     }
   };
 
@@ -138,6 +197,9 @@ export default function PomodoroTimer() {
     if (isActive) {
       pauseTimer();
     }
+
+    // Calculate what the next completed count will be
+    let nextCompletedCount = completedPomodoros;
 
     // Only save if it's a pomodoro session
     if (sessionType === "pomodoro") {
@@ -159,11 +221,18 @@ export default function PomodoroTimer() {
         "✅ Session Marked Complete!",
         "Great work! Session logged."
       );
+
+      // Manually increment the counter
+      completeSession();
+      nextCompletedCount = completedPomodoros + 1;
     }
 
     // Switch to next session type (bu otomatik olarak timer'ı resetleyecek)
     if (sessionType === "pomodoro") {
-      setSessionType("short_break");
+      // Check if it's time for a long break
+      const shouldTakeLongBreak = nextCompletedCount > 0 && nextCompletedCount % settings.longBreakInterval === 0;
+      const nextSessionType = shouldTakeLongBreak ? "long_break" : "short_break";
+      setSessionType(nextSessionType);
     } else if (sessionType === "short_break") {
       setSessionType("pomodoro");
     } else if (sessionType === "long_break") {
@@ -323,17 +392,47 @@ export default function PomodoroTimer() {
 
 // Settings Modal Component
 function PomodoroSettings({ onClose }: { onClose: () => void }) {
+  const { user } = useAuth();
   const { settings, updateSettings } = usePomodoroStore();
   const [pomodoro, setPomodoro] = useState(settings.pomodoro / 60);
   const [shortBreak, setShortBreak] = useState(settings.shortBreak / 60);
   const [longBreak, setLongBreak] = useState(settings.longBreak / 60);
+  const [longBreakInterval, setLongBreakInterval] = useState(settings.longBreakInterval);
+  const [autoStartBreaks, setAutoStartBreaks] = useState(settings.autoStartBreaks);
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleSave = () => {
-    updateSettings({
+  const handleSave = async () => {
+    if (!user) return;
+
+    setIsSaving(true);
+    const newSettings = {
       pomodoro: pomodoro * 60,
       shortBreak: shortBreak * 60,
       longBreak: longBreak * 60,
-    });
+      longBreakInterval: longBreakInterval,
+      autoStartBreaks: autoStartBreaks,
+    };
+
+    // Update local state
+    updateSettings(newSettings);
+
+    // Save to database
+    const { error } = await supabase
+      .from("user_settings")
+      .update({
+        pomodoro_duration: pomodoro * 60,
+        short_break_duration: shortBreak * 60,
+        long_break_duration: longBreak * 60,
+        long_break_interval: longBreakInterval,
+        auto_start_breaks: autoStartBreaks,
+      })
+      .eq("user_id", user.id);
+
+    if (error) {
+      console.error("Error saving settings:", error);
+    }
+
+    setIsSaving(false);
     onClose();
   };
 
@@ -385,18 +484,61 @@ function PomodoroSettings({ onClose }: { onClose: () => void }) {
             className="w-full px-3 py-2 border border-gray-300 dark:border-dark-border bg-white dark:bg-dark-card text-gray-900 dark:text-dark-text-primary rounded-lg focus:ring-2 focus:ring-primary outline-none"
           />
         </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-dark-text-secondary mb-2">
+            Long Break Interval (pomodoros)
+          </label>
+          <input
+            type="number"
+            value={longBreakInterval}
+            onChange={(e) => setLongBreakInterval(Number(e.target.value))}
+            min="2"
+            max="10"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-dark-border bg-white dark:bg-dark-card text-gray-900 dark:text-dark-text-primary rounded-lg focus:ring-2 focus:ring-primary outline-none"
+          />
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            Take a long break after this many pomodoros
+          </p>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-dark-text-secondary">
+              Auto-start Breaks
+            </label>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Automatically start break timers
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setAutoStartBreaks(!autoStartBreaks)}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+              autoStartBreaks ? "bg-primary" : "bg-gray-300 dark:bg-gray-600"
+            }`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                autoStartBreaks ? "translate-x-6" : "translate-x-1"
+              }`}
+            />
+          </button>
+        </div>
       </div>
 
       <div className="flex gap-2 mt-4">
         <button
           onClick={handleSave}
-          className="flex-1 py-2 bg-primary hover:bg-blue-600 text-white font-medium rounded-lg transition"
+          disabled={isSaving}
+          className="flex-1 py-2 bg-primary hover:bg-blue-600 text-white font-medium rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Save
+          {isSaving ? "Saving..." : "Save"}
         </button>
         <button
           onClick={onClose}
-          className="flex-1 py-2 bg-gray-200 dark:bg-dark-border hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-dark-text-primary font-medium rounded-lg transition"
+          disabled={isSaving}
+          className="flex-1 py-2 bg-gray-200 dark:bg-dark-border hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-dark-text-primary font-medium rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Cancel
         </button>

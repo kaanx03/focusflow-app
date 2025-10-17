@@ -43,3 +43,15 @@ export interface HabitEntry {
   success: boolean;
   created_at: string;
 }
+
+export interface UserSettings {
+  id: string;
+  user_id: string;
+  pomodoro_duration: number; // in seconds
+  short_break_duration: number; // in seconds
+  long_break_duration: number; // in seconds
+  long_break_interval: number;
+  auto_start_breaks: boolean;
+  created_at: string;
+  updated_at: string;
+}

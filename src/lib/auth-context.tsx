@@ -57,6 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         },
       },
     });
+    // Settings will be created automatically by database trigger
     return { error };
   };
 

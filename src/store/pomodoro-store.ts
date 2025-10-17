@@ -6,12 +6,15 @@ interface PomodoroSettings {
   pomodoro: number;
   shortBreak: number;
   longBreak: number;
+  longBreakInterval: number; // After how many pomodoros to take a long break
+  autoStartBreaks: boolean; // Auto-start break sessions
 }
 
 interface PomodoroStore {
   // Settings
   settings: PomodoroSettings;
   updateSettings: (settings: PomodoroSettings) => void;
+  loadSettingsFromDB: (settings: PomodoroSettings) => void;
 
   // Timer state
   sessionType: SessionType;
@@ -36,6 +39,8 @@ export const usePomodoroStore = create<PomodoroStore>((set, get) => ({
     pomodoro: 25 * 60,
     shortBreak: 5 * 60,
     longBreak: 15 * 60,
+    longBreakInterval: 4, // Default: long break after 4 pomodoros
+    autoStartBreaks: true, // Default: auto-start breaks
   },
 
   sessionType: "pomodoro",
@@ -55,6 +60,22 @@ export const usePomodoroStore = create<PomodoroStore>((set, get) => ({
       long_break: settings.longBreak,
     };
     set({ timeLeft: timeMap[sessionType] });
+  },
+
+  loadSettingsFromDB: (settings) => {
+    // Load settings from database without resetting timer if it's running
+    const { isActive, sessionType } = get();
+    set({ settings });
+
+    // Only update timeLeft if timer is not active
+    if (!isActive) {
+      const timeMap = {
+        pomodoro: settings.pomodoro,
+        short_break: settings.shortBreak,
+        long_break: settings.longBreak,
+      };
+      set({ timeLeft: timeMap[sessionType] });
+    }
   },
 
   setSessionType: (type) => {
