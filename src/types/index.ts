@@ -55,3 +55,18 @@ export interface UserSettings {
   created_at: string;
   updated_at: string;
 }
+
+export interface ActivePomodoroSession {
+  id: string;
+  user_id: string;
+  session_type: "pomodoro" | "short_break" | "long_break";
+  total_duration: number; // total session duration in seconds
+  time_remaining: number; // seconds remaining when paused
+  is_active: boolean; // true if running, false if paused
+  started_at: string; // timestamp when session started
+  paused_at?: string; // timestamp when paused (null if active)
+  end_time?: string; // calculated end time (null if paused)
+  completed_pomodoros: number; // track how many pomodoros completed in this cycle
+  created_at: string;
+  updated_at: string;
+}

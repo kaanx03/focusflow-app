@@ -1,12 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { usePomodoroStore } from "@/store/pomodoro-store";
 import { Play, Pause, RotateCcw, Settings, SkipForward } from "lucide-react";
 import confetti from "canvas-confetti";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth-context";
 import { loadUserSettings } from "@/lib/settings";
+import {
+  saveActiveSession,
+  loadActiveSession,
+  deleteActiveSession,
+  calculateTimeRemaining,
+} from "@/lib/active-session";
 
 export default function PomodoroTimer() {
   const { user } = useAuth();
@@ -16,6 +22,9 @@ export default function PomodoroTimer() {
     isActive,
     settings,
     completedPomodoros,
+    activeSessionId,
+    startTime,
+    endTime,
     setSessionType,
     startTimer,
     pauseTimer,
@@ -23,14 +32,31 @@ export default function PomodoroTimer() {
     tick,
     completeSession,
     loadSettingsFromDB,
+    loadActiveSession: loadActiveSessionToStore,
+    clearActiveSession,
   } = usePomodoroStore();
 
   const [showSettings, setShowSettings] = useState(false);
+  const [isLoadingSession, setIsLoadingSession] = useState(true);
+  const hasLoadedSession = useRef(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Load user settings from database on mount
+  // Preload audio on mount for faster playback
+  useEffect(() => {
+    audioRef.current = new Audio(
+      "https://orangefreesounds.com/wp-content/uploads/2025/07/Modern-futuristic-notification-sound-effect.mp3"
+    );
+    audioRef.current.volume = 0.6;
+    audioRef.current.load(); // Preload the audio file
+  }, []);
+
+  // Load user settings and active session from database on mount
   useEffect(() => {
     async function initializeSettings() {
-      if (user) {
+      if (user && !hasLoadedSession.current) {
+        hasLoadedSession.current = true;
+
+        // Load settings
         const userSettings = await loadUserSettings(user.id);
         if (userSettings) {
           loadSettingsFromDB({
@@ -41,10 +67,90 @@ export default function PomodoroTimer() {
             autoStartBreaks: userSettings.auto_start_breaks,
           });
         }
+
+        // Load active session if one exists
+        const activeSession = await loadActiveSession(user.id);
+        if (activeSession) {
+          const { timeLeft: calculatedTimeLeft, isStillValid } =
+            calculateTimeRemaining(activeSession);
+
+          if (isStillValid) {
+            // Calculate timestamps if session is active
+            let startTime: number | null = null;
+            let endTime: number | null = null;
+
+            if (activeSession.is_active && activeSession.end_time) {
+              const now = Date.now();
+              endTime = new Date(activeSession.end_time).getTime();
+              startTime = endTime - calculatedTimeLeft * 1000;
+            }
+
+            // Restore the session state
+            loadActiveSessionToStore({
+              sessionType: activeSession.session_type,
+              timeLeft: calculatedTimeLeft,
+              isActive: activeSession.is_active,
+              completedPomodoros: activeSession.completed_pomodoros,
+              startTime,
+              endTime,
+              activeSessionId: activeSession.id,
+            });
+          } else {
+            // Session expired, delete it
+            await deleteActiveSession(user.id);
+          }
+        }
+
+        setIsLoadingSession(false);
       }
     }
     initializeSettings();
-  }, [user, loadSettingsFromDB]);
+  }, [user, loadSettingsFromDB, loadActiveSessionToStore]);
+
+  // Save active session to database whenever timer state changes
+  useEffect(() => {
+    async function saveSession() {
+      if (!user || isLoadingSession) return;
+
+      // Only save if we have a session running or paused
+      if (timeLeft > 0 && timeLeft < settings[sessionType === "pomodoro" ? "pomodoro" : sessionType === "short_break" ? "shortBreak" : "longBreak"]) {
+        const totalDuration =
+          sessionType === "pomodoro"
+            ? settings.pomodoro
+            : sessionType === "short_break"
+              ? settings.shortBreak
+              : settings.longBreak;
+
+        const sessionId = await saveActiveSession({
+          userId: user.id,
+          sessionType,
+          totalDuration,
+          timeRemaining: timeLeft,
+          isActive,
+          startedAt: isActive && startTime ? new Date(startTime) : undefined,
+          pausedAt: !isActive ? new Date() : undefined,
+          endTime: isActive && endTime ? new Date(endTime) : undefined,
+          completedPomodoros,
+          existingSessionId: activeSessionId,
+        });
+
+        // Update the session ID in the store if it's a new session
+        if (sessionId && sessionId !== activeSessionId) {
+          loadActiveSessionToStore({
+            sessionType,
+            timeLeft,
+            isActive,
+            completedPomodoros,
+            startTime,
+            endTime,
+            activeSessionId: sessionId,
+          });
+        }
+      }
+    }
+
+    saveSession();
+  }, [isActive, timeLeft, sessionType, user, isLoadingSession]);
 
   // Request notification permission on mount
   useEffect(() => {
@@ -69,11 +175,51 @@ export default function PomodoroTimer() {
     return () => clearInterval(interval);
   }, [isActive, timeLeft, tick]);
 
-  // Sayfa tekrar görünür olduğunda zamanı senkronize et
+  // Background completion check - uses setTimeout for precise timing
+  // This ensures notifications play even if you're on a different tab
+  useEffect(() => {
+    if (!isActive || !endTime) return;
+
+    const now = Date.now();
+    const timeUntilComplete = endTime - now;
+
+    // If already completed, trigger immediately
+    if (timeUntilComplete <= 0) {
+      handleSessionComplete();
+      return;
+    }
+
+    // Set a timeout to trigger exactly when the timer completes
+    // This is more reliable than setInterval for background tabs
+    const completionTimeout = setTimeout(() => {
+      handleSessionComplete();
+    }, timeUntilComplete);
+
+    // Also set up a backup interval check (every 500ms)
+    // In case the timeout gets throttled
+    const backupInterval = setInterval(() => {
+      const currentTime = Date.now();
+      if (currentTime >= endTime) {
+        handleSessionComplete();
+      }
+    }, 500);
+
+    return () => {
+      clearTimeout(completionTimeout);
+      clearInterval(backupInterval);
+    };
+  }, [isActive, endTime]);
+
+  // Sayfa tekrar görünür olduğunda zamanı senkronize et ve tamamlanmış oturumları kontrol et
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (!document.hidden && isActive) {
         tick(); // Hemen bir tick çalıştır
+
+        // Check if session completed while tab was hidden
+        if (endTime && Date.now() >= endTime) {
+          handleSessionComplete();
+        }
       }
     };
 
@@ -82,7 +228,7 @@ export default function PomodoroTimer() {
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [isActive, tick]);
+  }, [isActive, tick, endTime]);
 
   // Update document title with remaining time
   useEffect(() => {
@@ -111,36 +257,45 @@ export default function PomodoroTimer() {
 
   const sendNotification = (title: string, body: string) => {
     if ("Notification" in window && Notification.permission === "granted") {
-      new Notification(title, {
+      const notification = new Notification(title, {
         body,
         icon: "/favicon.ico",
         badge: "/favicon.ico",
+        requireInteraction: true, // Notification stays until user interacts
+        tag: "pomodoro-timer", // Replace previous notifications
+        silent: false, // Don't silence the notification
+      });
+
+      // Play sound when notification is shown
+      notification.onshow = () => {
+        if (audioRef.current) {
+          audioRef.current.currentTime = 0; // Reset to start
+          audioRef.current.play().catch((err) => console.log("Audio blocked in notification:", err));
+        }
+      };
+    } else if ("Notification" in window && Notification.permission === "default") {
+      // Request permission if not yet granted
+      Notification.requestPermission().then((permission) => {
+        if (permission === "granted") {
+          sendNotification(title, body);
+        }
       });
     }
   };
 
   const handleSessionComplete = async () => {
-    completeSession();
+    console.log("🔔 Session complete triggered!", { sessionType, isActive });
 
-    // Play sound
-    try {
-      const audio = new Audio(
-        "https://orangefreesounds.com/wp-content/uploads/2025/07/Modern-futuristic-notification-sound-effect.mp3"
-      );
-      audio.volume = 0.6; // Set volume to 60%
-      audio.play().catch((err) => console.log("Audio blocked:", err));
-    } catch (error) {
-      console.log("Audio not available:", error);
+    // Delete active session from database when completed
+    if (user) {
+      await deleteActiveSession(user.id);
+      clearActiveSession();
     }
 
-    // Show confetti
-    confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { y: 0.6 },
-    });
+    completeSession();
 
-    // Send appropriate notification based on session type
+    // Send notification FIRST (this will also play sound via notification.onshow)
+    // This is more reliable for background tabs
     if (sessionType === "pomodoro") {
       sendNotification(
         "🎉 Pomodoro Complete!",
@@ -157,6 +312,19 @@ export default function PomodoroTimer() {
         "You're refreshed! Time to get back to work."
       );
     }
+
+    // Also try to play sound directly (for active tab)
+    if (audioRef.current) {
+      audioRef.current.currentTime = 0; // Reset to start
+      audioRef.current.play().catch((err) => console.log("Audio blocked:", err));
+    }
+
+    // Show confetti (only visible if tab is active)
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 },
+    });
 
     // Save to database - ONLY save pomodoro sessions, not breaks
     if (user && sessionType === "pomodoro") {
@@ -192,6 +360,10 @@ export default function PomodoroTimer() {
   // Manuel skip/complete fonksiyonu
   const handleSkipSession = async () => {
     if (!user) return;
+
+    // Delete active session from database
+    await deleteActiveSession(user.id);
+    clearActiveSession();
 
     // Pause timer first
     if (isActive) {
@@ -238,6 +410,15 @@ export default function PomodoroTimer() {
     } else if (sessionType === "long_break") {
       setSessionType("pomodoro");
     }
+  };
+
+  // Custom reset handler to delete active session
+  const handleReset = async () => {
+    if (user) {
+      await deleteActiveSession(user.id);
+      clearActiveSession();
+    }
+    resetTimer();
   };
 
   const formatTime = (seconds: number) => {
@@ -352,7 +533,7 @@ export default function PomodoroTimer() {
           </button>
 
           <button
-            onClick={resetTimer}
+            onClick={handleReset}
             className="flex items-center gap-1 xs:gap-2 px-2 xs:px-6 py-2 xs:py-3 bg-gray-100 dark:bg-dark-bg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-dark-text-primary font-medium rounded-lg transition text-sm xs:text-base flex-shrink-0"
           >
             <RotateCcw size={16} className="xs:w-5 xs:h-5" />
