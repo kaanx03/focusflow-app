@@ -195,7 +195,7 @@ export default function StatsPanel() {
   }
 
   return (
-    <div className="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-2xl p-2 xs:p-6 lg:p-8 shadow-lg">
+    <div className="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-2xl p-2 xs:p-6 lg:p-8 shadow-lg h-full flex flex-col">
       {/* Header with View Toggle */}
       <div className="flex items-center justify-between mb-3 xs:mb-6">
         <h2 className="text-base xs:text-xl lg:text-2xl font-bold text-gray-900 dark:text-dark-text-primary flex items-center gap-1 xs:gap-2">
@@ -275,7 +275,7 @@ export default function StatsPanel() {
       </div>
 
       {/* Chart */}
-      <div className="h-48 xs:h-64 lg:h-80">
+      <div className="flex-1 min-h-[200px] xs:min-h-[250px]">
         <ResponsiveContainer width="100%" height="100%">
           {view === "year" ? (
             <LineChart data={chartData}>

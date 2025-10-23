@@ -5,6 +5,7 @@ import { Plus, Trash2, Flame, TrendingUp, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth-context";
 import { Habit, HabitEntry } from "@/types";
+import { checkAndUnlockAchievements } from "@/lib/achievements";
 import { format, subDays, startOfDay } from "date-fns";
 
 type HabitType = "break" | "build";
@@ -299,12 +300,12 @@ function HabitList({
                     hasEntryForDate(habit.id, date)
                       ? `${colors.bg} text-white`
                       : date === today
-                      ? `${colors.light} border-2 ${
-                          color === "orange"
-                            ? "border-orange-300 dark:border-orange-700"
-                            : "border-green-300 dark:border-green-700"
-                        }`
-                      : "bg-gray-50 dark:bg-gray-800"
+                        ? `${colors.light} border-2 ${
+                            color === "orange"
+                              ? "border-orange-300 dark:border-orange-700"
+                              : "border-green-300 dark:border-green-700"
+                          }`
+                        : "bg-gray-50 dark:bg-gray-800"
                   }`}
                 >
                   {hasEntryForDate(habit.id, date) ? "✓" : ""}
@@ -369,6 +370,19 @@ function AddHabitModal({
 
     if (!error && data) {
       onAdd(data);
+
+      // Check and unlock achievements after creating habit
+      if (user) {
+        console.log(
+          "🔍 Checking achievements after habit creation for user:",
+          user.id
+        );
+        const newAchievements = await checkAndUnlockAchievements(user.id);
+        console.log(
+          "🎯 New achievements after habit creation:",
+          newAchievements
+        );
+      }
     }
   };
 

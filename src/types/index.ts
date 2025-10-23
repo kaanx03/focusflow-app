@@ -10,7 +10,8 @@ export interface PomodoroSession {
   user_id: string;
   duration_minutes: number;
   session_type: "pomodoro" | "short_break" | "long_break";
-  task_name?: string;
+  task_id?: string; // Link to task
+  task_name?: string; // Deprecated - for backwards compatibility
   completed_at: string;
 }
 
@@ -20,6 +21,8 @@ export interface Task {
   title: string;
   completed: boolean;
   pomodoro_count: number;
+  estimated_pomodoros: number; // How many pomodoros user estimates this task will take
+  project?: string; // Project/category name
   created_at: string;
   completed_at?: string;
 }
@@ -67,6 +70,18 @@ export interface ActivePomodoroSession {
   paused_at?: string; // timestamp when paused (null if active)
   end_time?: string; // calculated end time (null if paused)
   completed_pomodoros: number; // track how many pomodoros completed in this cycle
+  task_id?: string; // Link to task being worked on
   created_at: string;
   updated_at: string;
+}
+
+export interface Achievement {
+  id: string;
+  user_id: string;
+  achievement_type: string;
+  achievement_name: string;
+  achievement_description?: string;
+  icon_emoji?: string;
+  unlocked_at: string;
+  created_at: string;
 }

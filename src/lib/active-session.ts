@@ -14,6 +14,7 @@ interface SaveSessionParams {
   endTime?: Date;
   completedPomodoros: number;
   existingSessionId?: string | null;
+  taskId?: string | null;
 }
 
 /**
@@ -32,6 +33,7 @@ export async function saveActiveSession(params: SaveSessionParams): Promise<stri
     endTime,
     completedPomodoros,
     existingSessionId,
+    taskId,
   } = params;
 
   try {
@@ -47,6 +49,7 @@ export async function saveActiveSession(params: SaveSessionParams): Promise<stri
           paused_at: pausedAt?.toISOString() || null,
           end_time: endTime?.toISOString() || null,
           completed_pomodoros: completedPomodoros,
+          task_id: taskId || null,
           updated_at: new Date().toISOString(),
         })
         .eq("id", existingSessionId);
@@ -77,12 +80,13 @@ export async function saveActiveSession(params: SaveSessionParams): Promise<stri
         paused_at: pausedAt?.toISOString() || null,
         end_time: endTime?.toISOString() || null,
         completed_pomodoros: completedPomodoros,
+        task_id: taskId || null,
       })
       .select("id")
       .single();
 
     if (error) {
-      console.error("Error creating active session:", error);
+      console.error("Error creating active session:", error, JSON.stringify(error));
       return null;
     }
 
