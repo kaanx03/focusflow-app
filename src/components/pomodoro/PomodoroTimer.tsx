@@ -2,7 +2,15 @@
 
 import { useEffect, useState, useRef } from "react";
 import { usePomodoroStore } from "@/store/pomodoro-store";
-import { Play, Pause, RotateCcw, Settings, SkipForward, Target } from "lucide-react";
+import {
+  Play,
+  Pause,
+  RotateCcw,
+  Settings,
+  SkipForward,
+  Target,
+  X,
+} from "lucide-react";
 import confetti from "canvas-confetti";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth-context";
@@ -165,7 +173,17 @@ export default function PomodoroTimer() {
       if (!user || isLoadingSession) return;
 
       // Only save if we have a session running or paused
-      if (timeLeft > 0 && timeLeft < settings[sessionType === "pomodoro" ? "pomodoro" : sessionType === "short_break" ? "shortBreak" : "longBreak"]) {
+      if (
+        timeLeft > 0 &&
+        timeLeft <
+          settings[
+            sessionType === "pomodoro"
+              ? "pomodoro"
+              : sessionType === "short_break"
+                ? "shortBreak"
+                : "longBreak"
+          ]
+      ) {
         const totalDuration =
           sessionType === "pomodoro"
             ? settings.pomodoro
@@ -322,10 +340,15 @@ export default function PomodoroTimer() {
       notification.onshow = () => {
         if (audioRef.current) {
           audioRef.current.currentTime = 0; // Reset to start
-          audioRef.current.play().catch((err) => console.log("Audio blocked in notification:", err));
+          audioRef.current
+            .play()
+            .catch((err) => console.log("Audio blocked in notification:", err));
         }
       };
-    } else if ("Notification" in window && Notification.permission === "default") {
+    } else if (
+      "Notification" in window &&
+      Notification.permission === "default"
+    ) {
       // Request permission if not yet granted
       Notification.requestPermission().then((permission) => {
         if (permission === "granted") {
@@ -373,7 +396,9 @@ export default function PomodoroTimer() {
     // Also try to play sound directly (for active tab)
     if (audioRef.current) {
       audioRef.current.currentTime = 0; // Reset to start
-      audioRef.current.play().catch((err) => console.log("Audio blocked:", err));
+      audioRef.current
+        .play()
+        .catch((err) => console.log("Audio blocked:", err));
     }
 
     // Show confetti (only visible if tab is active)
@@ -431,8 +456,12 @@ export default function PomodoroTimer() {
     if (sessionType === "pomodoro") {
       // Check if it's time for a long break
       // completedPomodoros is already incremented by completeSession()
-      const shouldTakeLongBreak = completedPomodoros > 0 && completedPomodoros % settings.longBreakInterval === 0;
-      const nextSessionType = shouldTakeLongBreak ? "long_break" : "short_break";
+      const shouldTakeLongBreak =
+        completedPomodoros > 0 &&
+        completedPomodoros % settings.longBreakInterval === 0;
+      const nextSessionType = shouldTakeLongBreak
+        ? "long_break"
+        : "short_break";
 
       setSessionType(nextSessionType);
 
@@ -525,8 +554,12 @@ export default function PomodoroTimer() {
       const nextCompletedCount = completedPomodoros + 1;
 
       // Check if it's time for a long break
-      const shouldTakeLongBreak = nextCompletedCount > 0 && nextCompletedCount % settings.longBreakInterval === 0;
-      const nextSessionType = shouldTakeLongBreak ? "long_break" : "short_break";
+      const shouldTakeLongBreak =
+        nextCompletedCount > 0 &&
+        nextCompletedCount % settings.longBreakInterval === 0;
+      const nextSessionType = shouldTakeLongBreak
+        ? "long_break"
+        : "short_break";
 
       // Delete active session from database BEFORE switching session type
       await deleteActiveSession(user.id);
@@ -691,9 +724,11 @@ export default function PomodoroTimer() {
           <span className="text-sm font-medium">Settings</span>
         </button>
 
-        {/* Settings Panel */}
+        {/* Settings Modal */}
         {showSettings && (
-          <PomodoroSettings onClose={() => setShowSettings(false)} />
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <PomodoroSettings onClose={() => setShowSettings(false)} />
+          </div>
         )}
       </div>
     </div>
@@ -707,8 +742,12 @@ function PomodoroSettings({ onClose }: { onClose: () => void }) {
   const [pomodoro, setPomodoro] = useState(settings.pomodoro / 60);
   const [shortBreak, setShortBreak] = useState(settings.shortBreak / 60);
   const [longBreak, setLongBreak] = useState(settings.longBreak / 60);
-  const [longBreakInterval, setLongBreakInterval] = useState(settings.longBreakInterval);
-  const [autoStartBreaks, setAutoStartBreaks] = useState(settings.autoStartBreaks);
+  const [longBreakInterval, setLongBreakInterval] = useState(
+    settings.longBreakInterval
+  );
+  const [autoStartBreaks, setAutoStartBreaks] = useState(
+    settings.autoStartBreaks
+  );
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSave = async () => {
@@ -747,10 +786,18 @@ function PomodoroSettings({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <div className="mt-6 p-4 bg-gray-50 dark:bg-dark-bg rounded-lg border border-gray-200 dark:border-dark-border">
-      <h3 className="font-semibold text-gray-900 dark:text-dark-text-primary mb-4">
-        Timer Settings
-      </h3>
+    <div className="bg-white dark:bg-dark-card rounded-2xl p-6 max-w-md w-full shadow-2xl border border-gray-200 dark:border-dark-border animate-slide-up">
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-xl font-bold text-gray-900 dark:text-dark-text-primary">
+          Timer Settings
+        </h3>
+        <button
+          onClick={onClose}
+          className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition"
+        >
+          <X size={24} />
+        </button>
+      </div>
 
       <div className="space-y-4">
         <div>
