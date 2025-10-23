@@ -40,6 +40,7 @@ export default function PomodoroTimer() {
   const [isLoadingSession, setIsLoadingSession] = useState(true);
   const hasLoadedSession = useRef(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const isCompletingSession = useRef(false); // Prevent duplicate session completion
 
   // Preload audio on mount for faster playback
   useEffect(() => {
@@ -284,7 +285,12 @@ export default function PomodoroTimer() {
   };
 
   const handleSessionComplete = async () => {
-    console.log("🔔 Session complete triggered!", { sessionType, isActive });
+    // Prevent duplicate completion
+    if (isCompletingSession.current) {
+      return;
+    }
+
+    isCompletingSession.current = true;
 
     // Delete active session from database when completed
     if (user) {
@@ -355,23 +361,21 @@ export default function PomodoroTimer() {
       // Break finished, switch back to pomodoro (don't auto-start)
       setSessionType("pomodoro");
     }
+
+    // Reset the completion flag after everything is done
+    setTimeout(() => {
+      isCompletingSession.current = false;
+    }, 1000);
   };
 
   // Manuel skip/complete fonksiyonu
   const handleSkipSession = async () => {
     if (!user) return;
 
-    // Delete active session from database
-    await deleteActiveSession(user.id);
-    clearActiveSession();
-
     // Pause timer first
     if (isActive) {
       pauseTimer();
     }
-
-    // Calculate what the next completed count will be
-    let nextCompletedCount = completedPomodoros;
 
     // Only save if it's a pomodoro session
     if (sessionType === "pomodoro") {
@@ -394,20 +398,26 @@ export default function PomodoroTimer() {
         "Great work! Session logged."
       );
 
-      // Manually increment the counter
+      // Increment the counter BEFORE calculating next session
       completeSession();
-      nextCompletedCount = completedPomodoros + 1;
-    }
 
-    // Switch to next session type (bu otomatik olarak timer'ı resetleyecek)
-    if (sessionType === "pomodoro") {
+      // Now use the updated completedPomodoros value
+      // Note: completeSession() already incremented it, so we use completedPomodoros + 1
+      const nextCompletedCount = completedPomodoros + 1;
+
       // Check if it's time for a long break
       const shouldTakeLongBreak = nextCompletedCount > 0 && nextCompletedCount % settings.longBreakInterval === 0;
       const nextSessionType = shouldTakeLongBreak ? "long_break" : "short_break";
+
+      // Delete active session from database BEFORE switching session type
+      await deleteActiveSession(user.id);
+      clearActiveSession();
+
       setSessionType(nextSessionType);
-    } else if (sessionType === "short_break") {
-      setSessionType("pomodoro");
-    } else if (sessionType === "long_break") {
+    } else {
+      // For breaks, delete active session and switch back to pomodoro without saving
+      await deleteActiveSession(user.id);
+      clearActiveSession();
       setSessionType("pomodoro");
     }
   };
