@@ -9,6 +9,8 @@ import TaskList from "@/components/tasks/TaskList";
 import StatsPanel from "@/components/stats/StatsPanel";
 import Achievements from "@/components/achievements/Achievements";
 import Navbar from "@/components/layout/Navbar";
+import RainSoundPlayer from "@/components/RainSoundPlayer";
+import StreakTracker from "@/components/StreakTracker";
 
 export default function DashboardPage() {
   const { user, loading } = useAuth();
@@ -91,6 +93,12 @@ export default function DashboardPage() {
 
           {/* 4. Alt Sağ */}
           <Achievements />
+
+          {/* 5. Alt Sol - Rain Sound Player */}
+          <RainSoundPlayer />
+
+          {/* 6. Alt Sağ - Streak Tracker */}
+          <StreakTracker />
         </div>
       </main>
       {/* ====================================================================== */}

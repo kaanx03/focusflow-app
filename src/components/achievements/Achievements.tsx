@@ -39,6 +39,7 @@ export default function Achievements() {
   const { user } = useAuth();
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -117,7 +118,67 @@ export default function Achievements() {
 
       {/* Achievements Grid */}
       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 xs:gap-3">
-        {ALL_ACHIEVEMENTS.map((achievement) => {
+        {ALL_ACHIEVEMENTS.slice(0, showAll ? ALL_ACHIEVEMENTS.length : 6).map((achievement) => {
+          const unlocked = isUnlocked(achievement.type);
+
+          return (
+            <div
+              key={achievement.type}
+              className={`relative group cursor-pointer transition-all duration-200 ${
+                unlocked
+                  ? "hover:scale-110 hover:z-10"
+                  : "opacity-50 hover:opacity-70"
+              }`}
+            >
+              <div
+                className={`aspect-square rounded-2xl p-2 xs:p-3 flex flex-col items-center justify-center border-2 transition-all ${
+                  unlocked
+                    ? "bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border-yellow-300 dark:border-yellow-700 shadow-md"
+                    : "bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700"
+                }`}
+              >
+                {unlocked ? (
+                  <span className="text-2xl xs:text-3xl sm:text-4xl">
+                    {achievement.emoji}
+                  </span>
+                ) : (
+                  <Lock size={20} className="text-gray-400 dark:text-gray-600" />
+                )}
+              </div>
+
+              {/* Tooltip */}
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
+                <div className="bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-xs rounded-lg px-3 py-2 whitespace-nowrap shadow-xl">
+                  <div className="font-bold">{achievement.name}</div>
+                  <div className="text-gray-300 dark:text-gray-600">
+                    {achievement.description}
+                  </div>
+                  {unlocked && (
+                    <div className="text-yellow-400 dark:text-yellow-600 text-[10px] mt-1">
+                      ✓ Unlocked
+                    </div>
+                  )}
+                </div>
+                <div className="w-2 h-2 bg-gray-900 dark:bg-gray-100 rotate-45 absolute top-full left-1/2 -translate-x-1/2 -translate-y-1/2" />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Show More Button (Mobile Only) */}
+      {ALL_ACHIEVEMENTS.length > 6 && (
+        <button
+          onClick={() => setShowAll(!showAll)}
+          className="mt-4 w-full py-2 px-4 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium rounded-lg transition text-sm md:hidden"
+        >
+          {showAll ? "Show Less" : `Show More (${ALL_ACHIEVEMENTS.length - 6} more)`}
+        </button>
+      )}
+
+      {/* Desktop: Always show all */}
+      <div className="hidden md:grid md:grid-cols-5 lg:grid-cols-6 gap-2 xs:gap-3 mt-4">
+        {ALL_ACHIEVEMENTS.slice(6).map((achievement) => {
           const unlocked = isUnlocked(achievement.type);
 
           return (

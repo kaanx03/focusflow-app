@@ -327,24 +327,14 @@ export default function PomodoroTimer() {
 
   const sendNotification = (title: string, body: string) => {
     if ("Notification" in window && Notification.permission === "granted") {
-      const notification = new Notification(title, {
+      new Notification(title, {
         body,
         icon: "/favicon.ico",
         badge: "/favicon.ico",
         requireInteraction: true, // Notification stays until user interacts
         tag: "pomodoro-timer", // Replace previous notifications
-        silent: false, // Don't silence the notification
+        silent: true, // We'll play sound manually to avoid duplication
       });
-
-      // Play sound when notification is shown
-      notification.onshow = () => {
-        if (audioRef.current) {
-          audioRef.current.currentTime = 0; // Reset to start
-          audioRef.current
-            .play()
-            .catch((err) => console.log("Audio blocked in notification:", err));
-        }
-      };
     } else if (
       "Notification" in window &&
       Notification.permission === "default"
@@ -374,8 +364,7 @@ export default function PomodoroTimer() {
 
     completeSession();
 
-    // Send notification FIRST (this will also play sound via notification.onshow)
-    // This is more reliable for background tabs
+    // Send notification
     if (sessionType === "pomodoro") {
       sendNotification(
         "🎉 Pomodoro Complete!",
@@ -393,7 +382,7 @@ export default function PomodoroTimer() {
       );
     }
 
-    // Also try to play sound directly (for active tab)
+    // Play sound once (only here, not in notification.onshow to avoid duplication)
     if (audioRef.current) {
       audioRef.current.currentTime = 0; // Reset to start
       audioRef.current
