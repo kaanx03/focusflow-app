@@ -38,7 +38,7 @@ export default function RainSoundPlayer() {
         {isOpen && (
           <div className="relative w-full flex-1" style={{ minHeight: "300px" }}>
             <iframe
-              src="https://www.youtube.com/embed/8plwv25NYRo?autoplay=1&mute=0"
+             src="https://www.youtube.com/embed/yIQd2Ya0Ziw?autoplay=1&mute=0"
               title="Rain Sounds for Focus"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
