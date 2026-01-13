@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-ThothFlow (FocusFlow) is a Next.js 15 productivity application that combines Pomodoro technique, task management, and habit tracking. The app uses Supabase for authentication and data persistence, with a custom email reporting system via Resend API.
+ThothFlow (FocusFlow) is a Next.js 15 productivity application focused on the Pomodoro technique with productivity statistics and streak tracking. The app uses Supabase for authentication and data persistence.
 
 ## Development Commands
 
@@ -27,12 +27,11 @@ Development server runs at: http://localhost:3000
 ## Architecture
 
 ### Tech Stack
-- **Framework**: Next.js 15.5.5 with App Router and Turbopack
+- **Framework**: Next.js 15.5.7 with App Router and Turbopack
 - **UI**: React 19, TailwindCSS with dark mode support
 - **State Management**: Zustand for Pomodoro timer state
 - **Authentication**: Supabase Auth with context provider
 - **Database**: Supabase (PostgreSQL)
-- **Email**: Resend API for weekly reports
 - **TypeScript**: Strict mode enabled
 
 ### Project Structure
@@ -40,17 +39,16 @@ Development server runs at: http://localhost:3000
 ```
 src/
 ├── app/                          # Next.js App Router pages
-│   ├── api/send-weekly-report/   # Email report API route
 │   ├── dashboard/                # Main dashboard (protected)
 │   ├── login/                    # Login page
 │   ├── signup/                   # Signup page
 │   └── layout.tsx                # Root layout with providers
 ├── components/
 │   ├── pomodoro/                 # PomodoroTimer component
-│   ├── tasks/                    # TaskList component
-│   ├── habits/                   # HabitTracker component
 │   ├── stats/                    # StatsPanel component
-│   ├── reports/                  # EmailReportButton component
+│   ├── layout/                   # Navbar and layout components
+│   ├── RainSoundPlayer.tsx       # Ambient rain sound player
+│   ├── StreakTracker.tsx         # Pomodoro streak tracking
 │   └── ui/                       # ThemeToggle and shared UI
 ├── lib/
 │   ├── supabase.ts               # Supabase client instances
@@ -67,9 +65,8 @@ src/
 
 - **User**: User profile with email and optional metadata
 - **PomodoroSession**: Completed focus/break sessions with duration and type
-- **Task**: User tasks with completion status and pomodoro count
-- **Habit**: Habits with streak tracking (break or build type)
-- **HabitEntry**: Daily habit check-ins with success status
+- **UserSettings**: User-specific timer settings (durations, auto-start preferences)
+- **ActivePomodoroSession**: Tracks currently running or paused timer sessions
 
 ### State Management
 
@@ -98,20 +95,8 @@ src/
 
 **Database Operations**:
 - Pomodoro sessions saved on completion (not on skip for breaks)
-- Tasks, habits, and habit entries managed via direct Supabase queries
+- User settings and active sessions managed via direct Supabase queries
 - All queries scoped to user_id for security
-
-### API Routes
-
-**POST /api/send-weekly-report** (src/app/api/send-weekly-report/route.ts):
-- Accepts { userId } in body
-- Fetches last 7 days of pomodoro sessions, habits, and tasks
-- Generates HTML email with stats
-- Sends via Resend API
-- Requires environment variables:
-  - `NEXT_PUBLIC_SUPABASE_URL`
-  - `SUPABASE_SERVICE_ROLE_KEY` (for admin operations)
-  - `RESEND_API_KEY`
 
 ### Theme System
 
@@ -138,10 +123,10 @@ src/
 - Saves sessions to Supabase on completion
 
 **Dashboard Layout** (src/app/dashboard/page.tsx):
-- Responsive grid: left column (Pomodoro, Tasks), right column (Stats, Habits)
+- Responsive 2-column grid layout
+- Components: PomodoroTimer, StatsPanel, RainSoundPlayer, StreakTracker
 - Fixed navbar with theme toggle and sign out
 - Mobile hamburger menu with full-screen overlay
-- Hidden button for email report triggered programmatically
 
 ### Responsive Design
 
@@ -157,8 +142,6 @@ Required for full functionality:
 ```
 NEXT_PUBLIC_SUPABASE_URL=          # Supabase project URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY=     # Supabase anon/public key
-SUPABASE_SERVICE_ROLE_KEY=         # Supabase service role key (API routes only)
-RESEND_API_KEY=                    # Resend API key for emails
 ```
 
 ## Important Implementation Notes

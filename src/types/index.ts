@@ -10,41 +10,9 @@ export interface PomodoroSession {
   user_id: string;
   duration_minutes: number;
   session_type: "pomodoro" | "short_break" | "long_break";
-  task_id?: string; // Link to task
+  task_id?: string; // Link to task (optional, for future use)
   task_name?: string; // Deprecated - for backwards compatibility
   completed_at: string;
-}
-
-export interface Task {
-  id: string;
-  user_id: string;
-  title: string;
-  completed: boolean;
-  pomodoro_count: number;
-  estimated_pomodoros: number; // How many pomodoros user estimates this task will take
-  project?: string; // Project/category name
-  created_at: string;
-  completed_at?: string;
-}
-
-export interface Habit {
-  id: string;
-  user_id: string;
-  name: string;
-  emoji?: string;
-  habit_type: "break" | "build";
-  current_streak: number;
-  longest_streak: number;
-  created_at: string;
-}
-
-export interface HabitEntry {
-  id: string;
-  habit_id: string;
-  user_id: string;
-  date: string;
-  success: boolean;
-  created_at: string;
 }
 
 export interface UserSettings {
@@ -70,18 +38,7 @@ export interface ActivePomodoroSession {
   paused_at?: string; // timestamp when paused (null if active)
   end_time?: string; // calculated end time (null if paused)
   completed_pomodoros: number; // track how many pomodoros completed in this cycle
-  task_id?: string; // Link to task being worked on
+  task_id?: string; // Link to task being worked on (optional, for future use)
   created_at: string;
   updated_at: string;
-}
-
-export interface Achievement {
-  id: string;
-  user_id: string;
-  achievement_type: string;
-  achievement_name: string;
-  achievement_description?: string;
-  icon_emoji?: string;
-  unlocked_at: string;
-  created_at: string;
 }

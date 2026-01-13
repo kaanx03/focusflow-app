@@ -24,11 +24,9 @@ interface PomodoroStore {
   startTime: number | null;
   endTime: number | null;
   activeSessionId: string | null; // Database ID of the active session
-  activeTaskId: string | null; // Task being worked on
 
   // Actions
   setSessionType: (type: SessionType) => void;
-  setActiveTask: (taskId: string | null) => void;
   startTimer: () => void;
   pauseTimer: () => void;
   resetTimer: () => void;
@@ -42,7 +40,6 @@ interface PomodoroStore {
     startTime: number | null;
     endTime: number | null;
     activeSessionId: string;
-    activeTaskId?: string | null;
   }) => void;
   clearActiveSession: () => void;
 }
@@ -64,7 +61,6 @@ export const usePomodoroStore = create<PomodoroStore>((set, get) => ({
   startTime: null,
   endTime: null,
   activeSessionId: null,
-  activeTaskId: null,
 
   updateSettings: (settings) => {
     set({ settings });
@@ -109,8 +105,6 @@ export const usePomodoroStore = create<PomodoroStore>((set, get) => ({
       endTime: null,
     });
   },
-
-  setActiveTask: (taskId) => set({ activeTaskId: taskId }),
 
   startTimer: () => {
     const state = get();
@@ -175,7 +169,6 @@ export const usePomodoroStore = create<PomodoroStore>((set, get) => ({
       startTime: session.startTime,
       endTime: session.endTime,
       activeSessionId: session.activeSessionId,
-      activeTaskId: session.activeTaskId || null,
     });
   },
 

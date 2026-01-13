@@ -5,9 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import Image from "next/image";
 import PomodoroTimer from "@/components/pomodoro/PomodoroTimer";
-import TaskList from "@/components/tasks/TaskList";
 import StatsPanel from "@/components/stats/StatsPanel";
-import Achievements from "@/components/achievements/Achievements";
 import Navbar from "@/components/layout/Navbar";
 import RainSoundPlayer from "@/components/RainSoundPlayer";
 import StreakTracker from "@/components/StreakTracker";
@@ -52,52 +50,26 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-dark-bg overflow-x-hidden">
       <Navbar />
 
-      {/* Hidden Email Report Button */}
-      <div className="hidden">
-        <button
-          data-email-report
-          onClick={async () => {
-            if (!user) return;
-            try {
-              await fetch("/api/send-weekly-report", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ userId: user.id }),
-              });
-            } catch (error) {
-              console.error("Email error:", error);
-            }
-          }}
-        />
-      </div>
-
       {/* ====================================================================== */}
-      {/* GÜNCELLENMİŞ 2x2 ANA İÇERİK BÖLÜMÜ                                     */}
+      {/* ANA İÇERİK BÖLÜMÜ                                                      */}
       {/* ====================================================================== */}
       <main className="w-full max-w-[1600px] mx-auto px-2 xs:px-4 sm:px-6 lg:px-8 py-3 xs:py-6 sm:py-8 overflow-x-hidden">
-        {/* 2x2 Grid Konteyneri
+        {/* Grid Konteyneri
           - Mobil: Tek sütun (grid-cols-1)
           - Masaüstü (lg+): İki sütun (lg:grid-cols-2)
-          - items-stretch: Aynı satırdaki (ör: Pomodoro ve Stats) bileşenlerin
-            yüksekliklerinin eşit olmasını sağlar.
+          - items-stretch: Aynı satırdaki bileşenlerin yüksekliklerinin eşit olmasını sağlar.
         */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 items-stretch">
-          {/* 1. Üst Sol */}
+          {/* 1. Üst Sol - Pomodoro Timer */}
           <PomodoroTimer />
 
-          {/* 2. Üst Sağ */}
+          {/* 2. Üst Sağ - Stats Panel */}
           <StatsPanel />
 
-          {/* 3. Alt Sol */}
-          <TaskList />
-
-          {/* 4. Alt Sağ */}
-          <Achievements />
-
-          {/* 5. Alt Sol - Rain Sound Player */}
+          {/* 3. Alt Sol - Rain Sound Player */}
           <RainSoundPlayer />
 
-          {/* 6. Alt Sağ - Streak Tracker */}
+          {/* 4. Alt Sağ - Streak Tracker */}
           <StreakTracker />
         </div>
       </main>

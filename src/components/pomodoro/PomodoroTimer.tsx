@@ -15,14 +15,12 @@ import confetti from "canvas-confetti";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth-context";
 import { loadUserSettings } from "@/lib/settings";
-import { Task } from "@/types";
 import {
   saveActiveSession,
   loadActiveSession,
   deleteActiveSession,
   calculateTimeRemaining,
 } from "@/lib/active-session";
-import { checkAndUnlockAchievements } from "@/lib/achievements";
 
 export default function PomodoroTimer() {
   const { user } = useAuth();
@@ -33,11 +31,9 @@ export default function PomodoroTimer() {
     settings,
     completedPomodoros,
     activeSessionId,
-    activeTaskId,
     startTime,
     endTime,
     setSessionType,
-    setActiveTask,
     startTimer,
     pauseTimer,
     resetTimer,
@@ -50,7 +46,6 @@ export default function PomodoroTimer() {
 
   const [showSettings, setShowSettings] = useState(false);
   const [isLoadingSession, setIsLoadingSession] = useState(true);
-  const [tasks, setTasks] = useState<Task[]>([]);
   const hasLoadedSession = useRef(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const isCompletingSession = useRef(false); // Prevent duplicate session completion
@@ -120,52 +115,6 @@ export default function PomodoroTimer() {
     }
     initializeSettings();
   }, [user, loadSettingsFromDB, loadActiveSessionToStore]);
-
-  // Fetch tasks and auto-select the most recent incomplete task
-  useEffect(() => {
-    async function fetchTasks() {
-      if (!user) return;
-
-      const { data } = await supabase
-        .from("tasks")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("completed", false)
-        .order("created_at", { ascending: false });
-
-      if (data) {
-        setTasks(data);
-
-        // Auto-select the first (most recent) task if no task is selected
-        if (data.length > 0 && !activeTaskId) {
-          setActiveTask(data[0].id);
-        }
-      }
-    }
-
-    fetchTasks();
-
-    // Subscribe to task changes
-    const channel = supabase
-      .channel("tasks_changes")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "tasks",
-          filter: `user_id=eq.${user?.id}`,
-        },
-        () => {
-          fetchTasks();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user]);
 
   // Save active session to database whenever timer state changes
   useEffect(() => {
@@ -403,42 +352,8 @@ export default function PomodoroTimer() {
         user_id: user.id,
         duration_minutes: settings.pomodoro / 60,
         session_type: sessionType,
-        task_id: activeTaskId,
         completed_at: new Date().toISOString(),
       });
-
-      // Increment task pomodoro count if task is selected
-      if (activeTaskId) {
-        const task = tasks.find((t) => t.id === activeTaskId);
-        if (task) {
-          await supabase
-            .from("tasks")
-            .update({
-              pomodoro_count: (task.pomodoro_count || 0) + 1,
-            })
-            .eq("id", activeTaskId);
-        }
-      }
-
-      // Check and unlock achievements
-      console.log("🔍 Starting achievement check for user:", user.id);
-      const newAchievements = await checkAndUnlockAchievements(user.id);
-      console.log("🎯 New achievements returned:", newAchievements);
-
-      // Show notification for new achievements
-      if (newAchievements.length > 0) {
-        console.log("🔔 Showing achievement notifications...");
-        setTimeout(() => {
-          newAchievements.forEach((achievement) => {
-            sendNotification(
-              `${achievement.emoji} Achievement Unlocked!`,
-              achievement.name
-            );
-          });
-        }, 1000); // Delay to show after pomodoro complete notification
-      } else {
-        console.log("ℹ️ No new achievements to show");
-      }
     }
 
     // Determine next session type
@@ -486,22 +401,8 @@ export default function PomodoroTimer() {
         user_id: user.id,
         duration_minutes: settings.pomodoro / 60,
         session_type: sessionType,
-        task_id: activeTaskId,
         completed_at: new Date().toISOString(),
       });
-
-      // Increment task pomodoro count if task is selected
-      if (activeTaskId) {
-        const task = tasks.find((t) => t.id === activeTaskId);
-        if (task) {
-          await supabase
-            .from("tasks")
-            .update({
-              pomodoro_count: (task.pomodoro_count || 0) + 1,
-            })
-            .eq("id", activeTaskId);
-        }
-      }
 
       // Show success feedback
       confetti({
@@ -514,26 +415,6 @@ export default function PomodoroTimer() {
         "✅ Session Marked Complete!",
         "Great work! Session logged."
       );
-
-      // Check and unlock achievements
-      console.log("🔍 Starting achievement check (Skip) for user:", user.id);
-      const newAchievements = await checkAndUnlockAchievements(user.id);
-      console.log("🎯 New achievements returned (Skip):", newAchievements);
-
-      // Show notification for new achievements
-      if (newAchievements.length > 0) {
-        console.log("🔔 Showing achievement notifications (Skip)...");
-        setTimeout(() => {
-          newAchievements.forEach((achievement) => {
-            sendNotification(
-              `${achievement.emoji} Achievement Unlocked!`,
-              achievement.name
-            );
-          });
-        }, 1000); // Delay to show after session complete notification
-      } else {
-        console.log("ℹ️ No new achievements to show (Skip)");
-      }
 
       // Increment the counter BEFORE calculating next session
       completeSession();

@@ -1,16 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
-import { LogOut, Menu, X, Mail, Moon, Sun, Sprout, Home } from "lucide-react";
+import { LogOut, Menu, X, Moon, Sun } from "lucide-react";
 import Image from "next/image";
 import { useThemeStore } from "@/store/theme-store";
 
 export default function Navbar() {
   const { user, signOut } = useAuth();
-  const router = useRouter();
-  const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { isDarkMode, toggleTheme } = useThemeStore();
 
@@ -29,8 +26,6 @@ export default function Navbar() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [mobileMenuOpen]);
-
-  const isHabitsPage = pathname === "/habits";
 
   return (
     <>
@@ -68,35 +63,6 @@ export default function Navbar() {
 
               {/* Desktop Actions */}
               <div className="hidden md:flex items-center gap-2 flex-shrink-0">
-                {isHabitsPage ? (
-                  <button
-                    onClick={() => router.push("/dashboard")}
-                    className="flex items-center gap-2 px-3 lg:px-4 py-2 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg transition text-sm font-medium whitespace-nowrap"
-                  >
-                    <Home size={16} />
-                    <span className="hidden lg:inline">Dashboard</span>
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => router.push("/habits")}
-                    className="flex items-center gap-2 px-3 lg:px-4 py-2 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 text-green-600 dark:text-green-400 rounded-lg transition text-sm font-medium whitespace-nowrap"
-                  >
-                    <Sprout size={16} />
-                    <span className="hidden lg:inline">My Habits</span>
-                  </button>
-                )}
-                <button
-                  onClick={() => {
-                    const btn = document.querySelector(
-                      "[data-email-report]"
-                    ) as HTMLButtonElement;
-                    btn?.click();
-                  }}
-                  className="flex items-center gap-2 px-3 lg:px-4 py-2 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg transition text-sm font-medium whitespace-nowrap"
-                >
-                  <Mail size={16} />
-                  <span className="hidden lg:inline">Email Report</span>
-                </button>
                 <button
                   onClick={toggleTheme}
                   className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition"
@@ -191,65 +157,6 @@ export default function Navbar() {
 
           <div className="flex-1 overflow-y-auto p-4">
             <nav className="space-y-2">
-              {isHabitsPage ? (
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    router.push("/dashboard");
-                  }}
-                  className="w-full flex items-center gap-4 px-6 py-4 rounded-xl hover:bg-gray-100 dark:hover:bg-dark-bg transition text-left"
-                >
-                  <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
-                    <Home
-                      size={20}
-                      className="text-blue-600 dark:text-blue-400"
-                    />
-                  </div>
-                  <span className="text-base font-medium text-gray-700 dark:text-dark-text-secondary">
-                    Dashboard
-                  </span>
-                </button>
-              ) : (
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    router.push("/habits");
-                  }}
-                  className="w-full flex items-center gap-4 px-6 py-4 rounded-xl hover:bg-gray-100 dark:hover:bg-dark-bg transition text-left"
-                >
-                  <div className="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
-                    <Sprout
-                      size={20}
-                      className="text-green-600 dark:text-green-400"
-                    />
-                  </div>
-                  <span className="text-base font-medium text-gray-700 dark:text-dark-text-secondary">
-                    My Habits
-                  </span>
-                </button>
-              )}
-
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  const btn = document.querySelector(
-                    "[data-email-report]"
-                  ) as HTMLButtonElement;
-                  btn?.click();
-                }}
-                className="w-full flex items-center gap-4 px-6 py-4 rounded-xl hover:bg-gray-100 dark:hover:bg-dark-bg transition text-left"
-              >
-                <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
-                  <Mail
-                    size={20}
-                    className="text-blue-600 dark:text-blue-400"
-                  />
-                </div>
-                <span className="text-base font-medium text-gray-700 dark:text-dark-text-secondary">
-                  Email Weekly Report
-                </span>
-              </button>
-
               <button
                 onClick={toggleTheme}
                 className="w-full flex items-center justify-between gap-4 px-6 py-4 rounded-xl hover:bg-gray-100 dark:hover:bg-dark-bg transition text-left"
