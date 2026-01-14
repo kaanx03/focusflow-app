@@ -12,6 +12,7 @@ export default function SignupPage() {
   const [fullName, setFullName] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
   const router = useRouter();
   const { signUp, user } = useAuth();
 
@@ -20,6 +21,16 @@ export default function SignupPage() {
       router.push("/dashboard");
     }
   }, [user, router]);
+
+  // Auto-hide email confirmation toast after 5 seconds
+  useEffect(() => {
+    if (showEmailConfirmation) {
+      const timer = setTimeout(() => {
+        setShowEmailConfirmation(false);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [showEmailConfirmation]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,7 +43,9 @@ export default function SignupPage() {
       setError(error.message);
       setLoading(false);
     } else {
-      router.push("/dashboard");
+      // Kayıt başarılı - e-posta onayı gerekiyorsa mesajı göster
+      setShowEmailConfirmation(true);
+      setLoading(false);
     }
   };
 
@@ -64,6 +77,51 @@ export default function SignupPage() {
             Create your account to get started
           </p>
         </div>
+
+        {/* Email Confirmation Toast */}
+        {showEmailConfirmation && (
+          <div className="fixed top-4 right-4 z-50 animate-slide-in">
+            <div className="bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 max-w-md">
+              <svg
+                className="w-5 h-5 flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                />
+              </svg>
+              <div>
+                <p className="font-medium">Verification email sent!</p>
+                <p className="text-sm text-green-100">
+                  Check your inbox to confirm your account.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowEmailConfirmation(false)}
+                className="ml-4 text-white hover:text-green-100 transition"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Signup Card */}
         <div className="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-2xl p-8 shadow-lg">

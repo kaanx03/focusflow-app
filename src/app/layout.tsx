@@ -7,9 +7,9 @@ import { ThemeProvider } from "@/lib/theme-provider";
 const manrope = Manrope({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "ThothFlow - Pomodoro & Habit Tracker",
+  title: "ThothFlow - Pomodoro Timer",
   description:
-    "Master your time with the wisdom of Thoth. Track focus sessions, build habits, achieve your goals.",
+    "Master your time with the wisdom of Thoth. Track focus sessions, boost productivity, and achieve your goals.",
   icons: {
     icon: [
       {
@@ -19,6 +19,27 @@ export const metadata: Metadata = {
     ],
     shortcut: "/favicon.ico",
     apple: "/logo.png",
+  },
+  openGraph: {
+    title: "ThothFlow - Pomodoro Timer",
+    description:
+      "Master your time with the wisdom of Thoth. Track focus sessions, boost productivity, and achieve your goals.",
+    type: "website",
+    images: [
+      {
+        url: "/logo.png",
+        width: 512,
+        height: 512,
+        alt: "ThothFlow Logo",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary",
+    title: "ThothFlow - Pomodoro Timer",
+    description:
+      "Master your time with the wisdom of Thoth. Track focus sessions, boost productivity, and achieve your goals.",
+    images: ["/logo.png"],
   },
 };
 
