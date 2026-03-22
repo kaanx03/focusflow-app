@@ -48,7 +48,7 @@ export default function PomodoroTimer() {
   const [isLoadingSession, setIsLoadingSession] = useState(true);
   const hasLoadedSession = useRef(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const isCompletingSession = useRef(false); // Prevent duplicate session completion
+  const lastCompletedEndTime = useRef<number | null>(null); // Prevent duplicate session completion
 
   // Preload audio on mount for faster playback
   useEffect(() => {
@@ -214,18 +214,8 @@ export default function PomodoroTimer() {
       handleSessionComplete();
     }, timeUntilComplete);
 
-    // Also set up a backup interval check (every 500ms)
-    // In case the timeout gets throttled
-    const backupInterval = setInterval(() => {
-      const currentTime = Date.now();
-      if (currentTime >= endTime) {
-        handleSessionComplete();
-      }
-    }, 500);
-
     return () => {
       clearTimeout(completionTimeout);
-      clearInterval(backupInterval);
     };
   }, [isActive, endTime]);
 
@@ -298,12 +288,12 @@ export default function PomodoroTimer() {
   };
 
   const handleSessionComplete = async () => {
-    // Prevent duplicate completion
-    if (isCompletingSession.current) {
+    // Prevent duplicate completion for the same session using endTime as a unique session ID
+    if (!endTime || lastCompletedEndTime.current === endTime) {
       return;
     }
 
-    isCompletingSession.current = true;
+    lastCompletedEndTime.current = endTime;
 
     // Delete active session from database when completed
     if (user) {
@@ -380,10 +370,6 @@ export default function PomodoroTimer() {
       setSessionType("pomodoro");
     }
 
-    // Reset the completion flag after everything is done
-    setTimeout(() => {
-      isCompletingSession.current = false;
-    }, 1000);
   };
 
   // Manuel skip/complete fonksiyonu
