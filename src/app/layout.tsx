@@ -3,6 +3,7 @@ import { Manrope } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
 import { ThemeProvider } from "@/lib/theme-provider";
+import { ToastProvider } from "@/components/ui/Toast";
 
 const manrope = Manrope({ subsets: ["latin"] });
 
@@ -56,7 +57,9 @@ export default function RootLayout({
       </head>
       <body className={manrope.className}>
         <ThemeProvider>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            <ToastProvider>{children}</ToastProvider>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

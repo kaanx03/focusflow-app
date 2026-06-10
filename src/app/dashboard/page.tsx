@@ -9,6 +9,8 @@ import StatsPanel from "@/components/stats/StatsPanel";
 import Navbar from "@/components/layout/Navbar";
 import RainSoundPlayer from "@/components/RainSoundPlayer";
 import StreakTracker from "@/components/StreakTracker";
+import Leaderboard from "@/components/Leaderboard";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 
 export default function DashboardPage() {
   const { user, loading } = useAuth();
@@ -60,18 +62,13 @@ export default function DashboardPage() {
           - items-stretch: Aynı satırdaki bileşenlerin yüksekliklerinin eşit olmasını sağlar.
         */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 items-stretch">
-          {/* 1. Üst Sol - Pomodoro Timer */}
-          <PomodoroTimer />
-
-          {/* 2. Üst Sağ - Stats Panel */}
-          <StatsPanel />
-
-          {/* 3. Alt Sol - Rain Sound Player */}
-          <RainSoundPlayer />
-
-          {/* 4. Alt Sağ - Streak Tracker */}
-          <StreakTracker />
+          <ErrorBoundary><PomodoroTimer /></ErrorBoundary>
+          <ErrorBoundary><StatsPanel /></ErrorBoundary>
+          <ErrorBoundary><RainSoundPlayer /></ErrorBoundary>
+          <ErrorBoundary><StreakTracker /></ErrorBoundary>
         </div>
+
+        <ErrorBoundary><Leaderboard /></ErrorBoundary>
       </main>
       {/* ====================================================================== */}
       {/* GÜNCELLEME SONU                                                      */}

@@ -50,9 +50,12 @@ export default function StreakTracker() {
         return;
       }
 
+      // Use "sv" locale which formats dates as YYYY-MM-DD in local time (not UTC)
+      const toLocalDateStr = (d: Date) => d.toLocaleDateString("sv");
+
       const dateMap = new Map<string, number>();
       sessions?.forEach((session) => {
-        const date = new Date(session.completed_at).toISOString().split("T")[0];
+        const date = toLocalDateStr(new Date(session.completed_at));
         dateMap.set(date, (dateMap.get(date) || 0) + 1);
       });
 
@@ -60,7 +63,7 @@ export default function StreakTracker() {
       for (let i = DAYS_TO_SHOW - 1; i >= 0; i--) {
         const date = new Date();
         date.setDate(date.getDate() - i);
-        const dateStr = date.toISOString().split("T")[0];
+        const dateStr = toLocalDateStr(date);
         heatmap.push({
           date: dateStr,
           count: dateMap.get(dateStr) || 0,
@@ -89,10 +92,10 @@ export default function StreakTracker() {
 
       // Current Streak
       let current = 0;
-      const todayStr = new Date().toISOString().split("T")[0];
+      const todayStr = toLocalDateStr(new Date());
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayStr = yesterday.toISOString().split("T")[0];
+      const yesterdayStr = toLocalDateStr(yesterday);
 
       if (dateMap.has(todayStr) || dateMap.has(yesterdayStr)) {
         const checkDate = new Date();
@@ -100,7 +103,7 @@ export default function StreakTracker() {
           checkDate.setDate(checkDate.getDate() - 1);
         }
         while (true) {
-          const dateStr = checkDate.toISOString().split("T")[0];
+          const dateStr = toLocalDateStr(checkDate);
           if (dateMap.has(dateStr)) {
             current++;
             checkDate.setDate(checkDate.getDate() - 1);
