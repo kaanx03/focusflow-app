@@ -610,7 +610,7 @@ export default function PomodoroTimer() {
 
         {/* Settings Modal */}
         {showSettings && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
             <PomodoroSettings onClose={() => setShowSettings(false)} />
           </div>
         )}
@@ -639,9 +639,9 @@ function PomodoroSettings({ onClose }: { onClose: () => void }) {
     if (!user) return;
 
     setIsSaving(true);
-    const pomodoroNum = Math.max(1, Math.min(60, parseInt(pomodoro, 10) || 25));
-    const shortBreakNum = Math.max(1, Math.min(30, parseInt(shortBreak, 10) || 5));
-    const longBreakNum = Math.max(1, Math.min(60, parseInt(longBreak, 10) || 15));
+    const pomodoroNum = Math.max(1, parseInt(pomodoro, 10) || 25);
+    const shortBreakNum = Math.max(1, parseInt(shortBreak, 10) || 5);
+    const longBreakNum = Math.max(1, parseInt(longBreak, 10) || 15);
     const longBreakIntervalNum = Math.max(2, Math.min(10, parseInt(longBreakInterval, 10) || 4));
     const newSettings = {
       pomodoro: pomodoroNum * 60,
@@ -701,9 +701,8 @@ function PomodoroSettings({ onClose }: { onClose: () => void }) {
             type="number"
             value={pomodoro}
             onChange={(e) => setPomodoro(e.target.value === "" ? "" : String(parseInt(e.target.value, 10) || 0))}
-            onBlur={() => setPomodoro(String(Math.max(1, Math.min(60, parseInt(pomodoro, 10) || 25))))}
+            onBlur={() => setPomodoro(String(Math.max(1, parseInt(pomodoro, 10) || 25)))}
             min="1"
-            max="60"
             className="w-full px-3 py-2 border border-gray-300 dark:border-dark-border bg-white dark:bg-dark-card text-gray-900 dark:text-dark-text-primary rounded-lg focus:ring-2 focus:ring-primary outline-none"
           />
         </div>
@@ -716,9 +715,8 @@ function PomodoroSettings({ onClose }: { onClose: () => void }) {
             type="number"
             value={shortBreak}
             onChange={(e) => setShortBreak(e.target.value === "" ? "" : String(parseInt(e.target.value, 10) || 0))}
-            onBlur={() => setShortBreak(String(Math.max(1, Math.min(30, parseInt(shortBreak, 10) || 5))))}
+            onBlur={() => setShortBreak(String(Math.max(1, parseInt(shortBreak, 10) || 5)))}
             min="1"
-            max="30"
             className="w-full px-3 py-2 border border-gray-300 dark:border-dark-border bg-white dark:bg-dark-card text-gray-900 dark:text-dark-text-primary rounded-lg focus:ring-2 focus:ring-primary outline-none"
           />
         </div>
@@ -731,9 +729,8 @@ function PomodoroSettings({ onClose }: { onClose: () => void }) {
             type="number"
             value={longBreak}
             onChange={(e) => setLongBreak(e.target.value === "" ? "" : String(parseInt(e.target.value, 10) || 0))}
-            onBlur={() => setLongBreak(String(Math.max(1, Math.min(60, parseInt(longBreak, 10) || 15))))}
+            onBlur={() => setLongBreak(String(Math.max(1, parseInt(longBreak, 10) || 15)))}
             min="1"
-            max="60"
             className="w-full px-3 py-2 border border-gray-300 dark:border-dark-border bg-white dark:bg-dark-card text-gray-900 dark:text-dark-text-primary rounded-lg focus:ring-2 focus:ring-primary outline-none"
           />
         </div>

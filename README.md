@@ -6,6 +6,8 @@
 
 A Pomodoro productivity app with streak tracking, focus statistics, ambient sounds, and a weekly leaderboard — built with Next.js 15, Supabase, and TailwindCSS.
 
+![ThothFlow Dashboard](public/homepage.png)
+
 ---
 
 ## What is the Pomodoro Technique?
