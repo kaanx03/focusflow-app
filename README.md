@@ -1,5 +1,9 @@
 # ThothFlow
 
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Next.js](https://img.shields.io/badge/Next.js-15-black)
+![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green)
+
 A Pomodoro productivity app with streak tracking, focus statistics, ambient sounds, and a weekly leaderboard — built with Next.js 15, Supabase, and TailwindCSS.
 
 ---
@@ -283,4 +287,4 @@ The easiest way to deploy is [Vercel](https://vercel.com/):
 
 ## License
 
-MIT — do whatever you want with it.
+MIT — see [LICENSE](LICENSE) for details.
