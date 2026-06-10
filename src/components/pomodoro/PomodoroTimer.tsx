@@ -698,7 +698,9 @@ function PomodoroSettings({ onClose }: { onClose: () => void }) {
             Pomodoro (minutes)
           </label>
           <input
-            type="number"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
             value={pomodoro}
             onChange={(e) => setPomodoro(e.target.value === "" ? "" : String(parseInt(e.target.value, 10) || 0))}
             onBlur={() => setPomodoro(String(Math.max(1, parseInt(pomodoro, 10) || 25)))}
@@ -712,7 +714,9 @@ function PomodoroSettings({ onClose }: { onClose: () => void }) {
             Short Break (minutes)
           </label>
           <input
-            type="number"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
             value={shortBreak}
             onChange={(e) => setShortBreak(e.target.value === "" ? "" : String(parseInt(e.target.value, 10) || 0))}
             onBlur={() => setShortBreak(String(Math.max(1, parseInt(shortBreak, 10) || 5)))}
@@ -726,7 +730,9 @@ function PomodoroSettings({ onClose }: { onClose: () => void }) {
             Long Break (minutes)
           </label>
           <input
-            type="number"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
             value={longBreak}
             onChange={(e) => setLongBreak(e.target.value === "" ? "" : String(parseInt(e.target.value, 10) || 0))}
             onBlur={() => setLongBreak(String(Math.max(1, parseInt(longBreak, 10) || 15)))}
@@ -740,7 +746,9 @@ function PomodoroSettings({ onClose }: { onClose: () => void }) {
             Long Break Interval (pomodoros)
           </label>
           <input
-            type="number"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
             value={longBreakInterval}
             onChange={(e) => setLongBreakInterval(e.target.value === "" ? "" : String(parseInt(e.target.value, 10) || 0))}
             onBlur={() => setLongBreakInterval(String(Math.max(2, Math.min(10, parseInt(longBreakInterval, 10) || 4))))}
