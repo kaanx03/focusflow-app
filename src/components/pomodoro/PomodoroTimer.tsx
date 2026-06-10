@@ -210,7 +210,7 @@ export default function PomodoroTimer() {
     if (isActive && timeLeft > 0) {
       interval = setInterval(() => {
         tick();
-      }, 100); // 100ms'de bir kontrol et
+      }, 250);
     } else if (timeLeft === 0 && isActive) {
       // Only trigger completion if timer was actually running
       handleSessionComplete();

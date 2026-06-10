@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   BarChart,
   Bar,
@@ -35,18 +35,15 @@ export default function StatsPanel() {
   const [chartData, setChartData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Always holds the latest fetchStats so the subscription never goes stale
+  const fetchStatsRef = useRef<() => void>(() => {});
+
   useEffect(() => {
-    if (user) {
-      fetchStats();
-
-      const interval = setInterval(() => {
-        fetchStats();
-      }, 10000);
-
-      return () => clearInterval(interval);
-    }
+    if (user) fetchStats();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, view]);
 
+  // Subscription only depends on user — never re-creates on view change
   useEffect(() => {
     if (!user) return;
 
@@ -60,18 +57,14 @@ export default function StatsPanel() {
           table: "pomodoro_sessions",
           filter: `user_id=eq.${user.id}`,
         },
-        () => {
-          fetchStats();
-        }
+        () => { fetchStatsRef.current(); }
       )
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user, view]);
+    return () => { supabase.removeChannel(channel); };
+  }, [user]);
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     if (!user) return;
 
     const today = format(startOfDay(new Date()), "yyyy-MM-dd");
@@ -162,7 +155,11 @@ export default function StatsPanel() {
     }
 
     setLoading(false);
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, view]);
+
+  // Keep ref in sync so the subscription always calls the latest version
+  useEffect(() => { fetchStatsRef.current = fetchStats; }, [fetchStats]);
 
   const formatMinutes = (minutes: number) => {
     const hours = Math.floor(minutes / 60);
