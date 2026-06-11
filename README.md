@@ -95,22 +95,6 @@ This creates three tables and the leaderboard function:
 | `user_settings` | Per-user timer preferences |
 | `get_weekly_leaderboard()` | Aggregated weekly ranking |
 
-### Already have the database? Run the v2 migration instead
-
-If you set up the database before and just pulled new code, run `migration-v2.sql` in the SQL Editor instead. It applies only the changes:
-
-```
-migration-v2.sql
-```
-
-What it does:
-1. Adds `session_token` column to `pomodoro_sessions` (prevents duplicate entries from multiple tabs)
-2. Recreates `get_weekly_leaderboard()` with the new signature (removes user UUID exposure)
-3. Fixes the `active_pomodoro_sessions` UPDATE policy (adds `WITH CHECK`)
-4. Adds a composite index on `(user_id, completed_at, session_type)` for faster queries
-
----
-
 ## Step 5 — Get Your Supabase API Keys
 
 1. In your Supabase project, go to **Settings → API** (left sidebar → gear icon → API)
